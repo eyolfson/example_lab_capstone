@@ -7,68 +7,81 @@
 #include <unistd.h>
 #include <ctype.h>
 
-int main(){
-
-
-
-
-printf("  %s %s\n","PID", "CMD");
-
-DIR * p1;
-DIR * p2;
-struct dirent *dp;
-p1=opendir("/proc");
-for (dp=readdir(p1);dp!=NULL;dp=readdir(p1)){
-if((isdigit(dp->d_name[0])!=0) & (strcmp(dp->d_name, ".") != 0)){
-char path[15];
-snprintf(path, 15, "/proc/%s", dp->d_name);
-p2=opendir(path);
-if (p2<0){
-
-
-
+int isNumber(char num[]){
+    for (int i=0; num[i]!='\0'; i++){
+        if (isdigit(num[i])==0){
+            return 0;
+        }
+    } return 1;
 }
 
-else{closedir(p2);
-char* new_str=(char*)malloc(sizeof(char)*(strlen(dp->d_name)+1));
-strcpy(new_str,dp->d_name);
-char path2[25];
-snprintf(path2, 25, "/proc/%s/status", dp->d_name);
-int fd=open(path2,O_RDONLY); if(fd<0){
-}else{
-char* buf=(char*)calloc(1024,sizeof(char));
-ssize_t sz=read(fd, buf,15);
-if (sz<0){
-int error = errno;
-perror("read");
-return error;
-}
-int i=6;
-int count=0;
-char* s1=malloc(sizeof(char)*15);
-while (buf[i]!='\n'){
-    s1[i-6]=buf[i];
-    i++;
-    count++;
+void check(int ret, const char* message) {
+    if (ret != -1) {
+        return;
     }
-s1=realloc(s1,sizeof(char)*(count+1));
-s1[count]='\0';
-if (strlen(new_str)==1){
-    printf("    %s",new_str);
-}else if(strlen(new_str)==2){
-    printf("   %s", new_str);
-}else if(strlen(new_str)==3){
-    printf("  %s", new_str);
-}else if(strlen(new_str)==4){
-    printf(" %s", new_str);
-}else if(strlen(new_str)==5){
-    printf("%s", new_str);
+    int error = errno;
+    perror(message);
+    exit(error);
 }
-printf(" %s\n", s1);
-close(fd);
-free(buf);
-free(new_str);
-free(s1);}}}
-}closedir(p1);
+
+int main() {
+    DIR *dir = opendir("/proc");
+    if (dir == NULL){
+        int error = errno;
+        perror("opendir");
+        exit(error);
+    }
+
+    printf("%*s", 5, "PID");
+    printf(" CMD\n");
+    struct dirent *dp;
+
+
+    errno = 0;
+    while ((dp = readdir(dir)) != NULL) {
+        if (isNumber(dp->d_name) != 0) {
+
+
+            char str[1024] = "/proc/";
+
+            strcat(str, dp->d_name);
+            strcat(str,"/status");
+
+            int fd = open(str, O_RDONLY);
+            check(fd, "open");
+
+            char buffer[4096];
+            int bytes_read = read(fd, buffer, sizeof(buffer));
+            check(bytes_read, "read");
+
+            int i = 0;
+            while (buffer[i] != '\n') {
+                i++;
+            }
+
+
+
+            char name[4096];
+            strncpy(name, buffer+6, i-6);
+            name[i-6] = '\0';
+            strcat(name, "\n");
+            printf("%*s", 5, dp->d_name);
+
+            printf("%s", " ");
+
+            printf("%s", name);
+
+            int closefd = close(fd);
+            check(closefd, "close");
+        }
+    }
+    if (errno != 0){
+        int error = errno;
+        perror("readdir");
+        exit(error);
+    }
+    int closedirerr = closedir(dir);
+    check(closedirerr, "closedir");
+
     return 0;
 }
