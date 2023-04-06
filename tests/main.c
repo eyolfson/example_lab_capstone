@@ -35,22 +35,13 @@ int main(void) {
         shared_memory[i] = TEST_MAGIC;
     }
 
-    pid_t pid = fork();
-    if (pid == 0) {
-        test();
-        exit(0);
-    }
-    else if (pid == -1) {
-        exit(errno);
-    }
-    int wstatus;
-    wait(&wstatus);
+    test();
     check();
+
     munmap(shared_memory, 4096 * 10);
     if (failed_check) {
         exit(1);
     }
-    assert(WIFEXITED(wstatus));
-    assert(WEXITSTATUS(wstatus) == 0);
+
     return 0;
 }
