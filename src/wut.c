@@ -43,11 +43,11 @@ void wut_init() {
 }
 
 int wut_id() {
-    return -1;
+    return 0;
 }
 
 int wut_create(void (*run)(void)) {
-    return -1;
+    return 1;
 }
 
 int wut_cancel(int id) {
