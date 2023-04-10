@@ -43,7 +43,7 @@ void wut_init() {
 }
 
 int wut_id() {
-    return 0;
+    return 1;
 }
 
 int wut_create(void (*run)(void)) {
@@ -51,7 +51,7 @@ int wut_create(void (*run)(void)) {
 }
 
 int wut_cancel(int id) {
-    return -1;
+    return 1;
 }
 
 int wut_join(int id) {
